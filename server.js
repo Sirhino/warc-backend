@@ -16,6 +16,7 @@ const ABI = [
   "function publicPrice() view returns (uint256)",
   "function balanceOf(address) view returns (uint256)",
   "function salePhase() view returns (uint8)",
+  "function getMintStatus() view returns (uint256, uint256, uint8, uint256)",
   "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
 ];
 
