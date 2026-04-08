@@ -50,18 +50,20 @@ async function syncMints() {
       timestamp: new Date().toISOString()
     }));
 
-    const [total,,phase,price] = await contract.getMintStatus();
-    const maxSupply = await contract.MAX_SUPPLY();
+    const total = await contract.totalSupply();
+const maxSupply = await contract.MAX_SUPPLY();
+const phase = await contract.salePhase();
+const price = await contract.publicPrice();
 
     statsCache = {
-      totalMinted: Number(total),
-      maxSupply: Number(maxSupply),
-      remaining: Number(maxSupply) - Number(total),
-      phase: Number(phase),
-      priceUsdc: ethers.formatEther(price),
-      contractAddress: process.env.CONTRACT_ADDRESS,
-      lastUpdated: new Date().toISOString()
-    };
+  totalMinted: Number(total),
+  maxSupply: Number(maxSupply),
+  remaining: Number(maxSupply) - Number(total),
+  phase: Number(phase),
+  priceUsdc: ethers.formatEther(price),
+  contractAddress: process.env.CONTRACT_ADDRESS,
+  lastUpdated: new Date().toISOString()
+};
 
     lastSync = new Date().toISOString();
     console.log(`[${lastSync}] Synced: ${mintCache.length} mints`);
