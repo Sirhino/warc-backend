@@ -13,8 +13,10 @@ const ABI = [
   "function totalSupply() view returns (uint256)",
   "function MAX_SUPPLY() view returns (uint256)",
   "function publicPrice() view returns (uint256)",
+  "function whitelistPrice() view returns (uint256)",
   "function balanceOf(address) view returns (uint256)",
   "function salePhase() view returns (uint8)",
+  "function getMintStatus() view returns (uint256, uint256, uint256, uint256, uint256, bool)",
   "event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)"
 ];
 
@@ -55,17 +57,17 @@ async function syncMints() {
       timestamp: new Date().toISOString()
     }));
 
-    const total = await contract.totalSupply();
+    const [totalMinted, remaining, phase, pubPrice, wlPrice, isRevealed] = await contract.getMintStatus();
     const maxSupply = await contract.MAX_SUPPLY();
-    const phase = await contract.salePhase();
-    const price = await contract.publicPrice();
 
     statsCache = {
-      totalMinted: Number(total),
+      totalMinted: Number(totalMinted),
       maxSupply: Number(maxSupply),
-      remaining: Number(maxSupply) - Number(total),
+      remaining: Number(remaining),
       phase: Number(phase),
-      priceUsdc: ethers.formatUnits(price, 6),
+      publicPrice: ethers.formatUnits(pubPrice, 6),
+      whitelistPrice: ethers.formatUnits(wlPrice, 6),
+      isRevealed,
       contractAddress: process.env.CONTRACT_ADDRESS,
       lastUpdated: new Date().toISOString()
     };
