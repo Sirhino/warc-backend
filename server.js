@@ -1,0 +1,44 @@
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+const app = express();
+app.use(cors());
+app.use(express.json({ limit: '1mb' }));
+const limiter = rateLimit({ windowMs: 60000, max: 200, standardHeaders: true, legacyHeaders: false });
+app.use('/api/', limiter);
+const arc = require('./src/services/arcService');
+const mintsRouter = require('./src/routes/mints');
+const vehiclesRouter = require('./src/routes/vehicles');
+const identityRouter = require('./src/routes/identity');
+const tournamentsRouter = require('./src/routes/tournaments');
+const predictionsRouter = require('./src/routes/predictions');
+const notificationsRouter = require('./src/routes/notifications');
+app.use('/api/mints', mintsRouter);
+app.get('/api/holders', (req, res) => res.redirect(307, '/api/mints/holders'));
+app.get('/api/wallet/:address', (req, res) => res.redirect(307, `/api/mints/wallet/${req.params.address}`));
+app.get('/api/health', (req, res) => res.redirect(307, '/api/mints/health'));
+app.get('/api/analytics', (req, res) => res.redirect(307, '/api/mints/analytics'));
+app.use('/api/upgrades', vehiclesRouter);
+app.use('/api/cars', vehiclesRouter);
+app.use('/garage', vehiclesRouter);
+app.use('/race', vehiclesRouter);
+app.use('/leaderboard', vehiclesRouter);
+app.use('/asset', vehiclesRouter);
+app.use('/verify-holder', vehiclesRouter);
+app.use('/api/identity', identityRouter);
+app.use('/api/tournaments', tournamentsRouter);
+app.use('/api/events', predictionsRouter);
+app.use('/api/predictions', predictionsRouter);
+app.use('/api/notifications', notificationsRouter);
+app.use((req, res) => res.status(404).json({ error: `Route not found: ${req.method} ${req.path}` }));
+app.use((err, req, res, next) => res.status(500).json({ error: 'Internal server error', detail: err.message }));
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, async () => {
+  console.log('WarcGarage Backend v2.0 — PROD');
+  console.log(`Listening on port ${PORT}`);
+  arc.init();
+  try { const r = await arc.syncMints(); console.log(`[BOOT] Arc sync: ${r.synced} vehicles`); }
+  catch(e) { console.warn('[BOOT] Arc sync skipped:', e.message); }
+  setInterval(async () => { try { await arc.syncMints(); } catch(e){} }, 30000);
+});
